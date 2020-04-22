@@ -12,6 +12,10 @@ class Cars(ABC):
     def brand(self):
         pass
 
+    @abstractmethod
+    def model_name(self):
+        pass
+
     def introduce_car(self):
         pass
 
@@ -23,6 +27,9 @@ class Skoda(Cars):
 
     def brand(self):
         print("Mercedes")
+
+    def model_name(self):
+        return self.model
 
     def indroduce_car(self):
         print(f"Brand: {self.brand_name}")
@@ -38,6 +45,9 @@ class Ford(Cars):
     def brand(self):
         print("Ford")
 
+    def model_name(self):
+        return self.model
+
     def indroduce_car(self):
         print(f"Brand: {self.brand_name}")
         print(f"Model: {self.model}")
@@ -51,6 +61,9 @@ class Polonez(Cars):
 
     def brand(self):
         print("Polonez")
+
+    def model_name(self):
+        return self.model
 
     def indroduce_car(self):
         print(f"Brand: {self.brand_name}")
@@ -69,3 +82,5 @@ if __name__ == '__main__':
     polonez.indroduce_car()
     print('-----')
     ford.indroduce_car()
+    print("-----")
+    print(skoda.model_name())

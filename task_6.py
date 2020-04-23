@@ -107,11 +107,14 @@ class CarWithCentralLock(Car):
         self.unlock_signal = False
 
     def unlock(self, *args, **kwargs):
+        self.register()
+        self.central_lock.unlock()
+        self.unregister()
+
+
+    def register(self):
         if not self.unlock_signal:
             self.central_lock.register('unlock', 'front left', self.car._Car__doors['front left'])
-            self.central_lock.unlock()
-            self.unlock_signal = True
-            self.central_lock.unregister('unlock', 'front left')
 
         elif self.unlock_signal:
             door_list = []
@@ -119,9 +122,14 @@ class CarWithCentralLock(Car):
                 door_list.append([door_name, door])
             for door_num in range(1, len(door_list)):
                 self.central_lock.register('unlock', door_list[door_num][0], door_list[door_num][1])
-            self.central_lock.unlock()
-            self.unlock_signal = False
 
+    def unregister(self):
+        if not self.unlock_signal:
+            self.unlock_signal = True
+            self.central_lock.unregister('unlock', 'front left')
+
+        elif self.unlock_signal:
+            self.unlock_signal = False
             door_list = []
             for door_name in self.car._Car__doors.keys():
                 door_list.append(door_name)

@@ -1,6 +1,41 @@
 import copy
 
 
+class MismatchedDoorAdapter:
+    def __init__(self):
+        self.mismatched_door = MismatchedDoor()
+        self._locked = self.mismatched_door.is_locked
+
+    @property
+    def is_locked(self):
+        return self.mismatched_door.is_locked
+
+    @property
+    def locked_status(self):
+        return 'locked' if self._locked else 'unlocked'
+
+    def lock(self):
+        return self.mismatched_door.lock_the_mismatched__door()
+
+    def unlock(self):
+        return self.mismatched_door.unlock_the_mismatched_door()
+
+
+class MismatchedDoor:
+    def __init__(self):
+        self._is_locked = False
+
+    @property
+    def is_locked(self):
+        return self._is_locked
+
+    def lock_the_mismatched__door(self):
+        self._is_locked = True
+
+    def unlock_the_mismatched_door(self):
+        self._is_locked = False
+
+
 class Door:
     def __init__(self):
         self._locked = False
@@ -107,13 +142,11 @@ class CarWithCentralLock(Car):
         self.unlock_signal = False
 
     def unlock(self, *args, **kwargs):
-        self.register()
-        self.central_lock.unlock()
-        self.unregister()
-
-    def register(self):
         if not self.unlock_signal:
             self.central_lock.register('unlock', 'front left', self.car._Car__doors['front left'])
+            self.central_lock.unlock()
+            self.unlock_signal = True
+            self.central_lock.unregister('unlock', 'front left')
 
         elif self.unlock_signal:
             door_list = []
@@ -121,14 +154,9 @@ class CarWithCentralLock(Car):
                 door_list.append([door_name, door])
             for door_num in range(1, len(door_list)):
                 self.central_lock.register('unlock', door_list[door_num][0], door_list[door_num][1])
-
-    def unregister(self):
-        if not self.unlock_signal:
-            self.unlock_signal = True
-            self.central_lock.unregister('unlock', 'front left')
-
-        elif self.unlock_signal:
+            self.central_lock.unlock()
             self.unlock_signal = False
+
             door_list = []
             for door_name in self.car._Car__doors.keys():
                 door_list.append(door_name)
@@ -152,9 +180,9 @@ class Rover(Car):
 
 
 if __name__ == '__main__':
-    door = Door()
+    mismatched_door = MismatchedDoorAdapter()
     central_lock = CentralLock()
-    fiat = CarWithCentralLock(Fiat('panda', 3, door, 'niebieski'), central_lock)
+    fiat = CarWithCentralLock(Fiat('panda', 3, mismatched_door, 'niebieski'), central_lock)
 
     fiat.doors()
 
@@ -164,10 +192,3 @@ if __name__ == '__main__':
     print('-----SECOND UNLOCK------')
     fiat.unlock('front left')
     print('-----------')
-    fiat.lock('front left')
-    print('-----FIRST UNLOCK------')
-    fiat.unlock('front left')
-    print('-----------')
-    fiat.lock('front left')
-    print('-----FIRST UNLOCK------')
-    fiat.unlock('front left')

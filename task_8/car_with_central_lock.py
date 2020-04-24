@@ -1,92 +1,21 @@
-import copy
-
-
-class MismatchedDoorAdapter:
-    def __init__(self):
-        self.mismatched_door = MismatchedDoor()
-        self._locked = self.mismatched_door.is_locked
-
-    @property
-    def is_locked(self):
-        return self.mismatched_door.is_locked
-
-    @property
-    def locked_status(self):
-        return 'locked' if self._locked else 'unlocked'
-
-    def lock(self):
-        return self.mismatched_door.lock_the_mismatched__door()
-
-    def unlock(self):
-        return self.mismatched_door.unlock_the_mismatched_door()
-
-
-class MismatchedDoor:
-    def __init__(self):
-        self._is_locked = False
-
-    @property
-    def is_locked(self):
-        return self._is_locked
-
-    def lock_the_mismatched__door(self):
-        self._is_locked = True
-
-    def unlock_the_mismatched_door(self):
-        self._is_locked = False
-
-
-class Door:
-    def __init__(self):
-        self._locked = False
-
-    @property
-    def is_locked(self):
-        return self._locked
-
-    @property
-    def locked_status(self):
-        return 'locked' if self._locked else 'unlocked'
-
-    def lock(self):
-        self._locked = True
-
-    def unlock(self):
-        self._locked = False
-
-
-class CentralLock:
-    def __init__(self):
-        self.subscribers = {event: {} for event in ('lock', 'unlock')}
-
-    def register(self, event: str, door_name: str, door: Door):
-        self.subscribers[event].update({door_name: door})
-
-    def unregister(self, event: str, door_name: str):
-        del self.subscribers[event][door_name]
-
-    def lock(self):
-        for door_name, door in self.subscribers['lock'].items():
-            door.lock()
-            print(f'Door: {door_name} {door.locked_status}')
-
-    def unlock(self):
-        for door_name, door in self.subscribers['unlock'].items():
-            door.unlock()
-            print(f'Door: {door_name} {door.locked_status}')
+from Lesson_1.task_8.central_lock import CentralLock
+from Lesson_1.task_8.door import DoorFactory
 
 
 class Car:
     _possible_doors = ('front left', 'front right', 'rear left', 'rear right', 'trunk')
 
-    def __init__(self, brand, model, number_of_doors, door: Door, color):
+    def __init__(self, brand, model, number_of_doors, door: DoorFactory, color):
+        self._Car__doors = None
         self.__brand = brand
         self.__model = model
         self.__number_of_doors = number_of_doors
         self.__color = color
+        self.door_factory = door
 
-        self.__doors = {self._possible_doors[i]: copy.copy(door) for i in range(number_of_doors - 1)}
-        self.__doors.update({self._possible_doors[-1]: door})
+        self.__doors = {self._possible_doors[i]: self.door_factory.create(self._possible_doors[i])
+                        for i in range(number_of_doors - 1)}
+        self.__doors.update({self._possible_doors[-1]: self.door_factory.create('trunk')})
 
     def lock(self, door_name):
         """Klasa zyskała metodę do zamykania drzwi."""
@@ -127,7 +56,7 @@ class CarWithCentralLock(Car):
     """Wzorzec dekorator poprzez udekorowanie klasy inną klasą."""
 
     def __init__(self, car: Car, central_lock: CentralLock):
-        super().__init__(car.brand, car.model, car.number_of_doors, car.color, car.model)
+        super().__init__(car.brand, car.model, car.number_of_doors, car.door_factory, car.color)
         self.car = car
         self.central_lock = central_lock
         self.unlock_signal = False
@@ -185,18 +114,3 @@ class Audi(Car):
 class Rover(Car):
     def __init__(self, *args, **kwargs):
         super(Rover, self).__init__('Rover', *args, **kwargs)
-
-
-if __name__ == '__main__':
-    mismatched_door = MismatchedDoorAdapter()
-    central_lock = CentralLock()
-    fiat = CarWithCentralLock(Fiat('panda', 3, mismatched_door, 'niebieski'), central_lock)
-
-    fiat.doors()
-
-    fiat.lock('front left')
-    print('-----FIRST UNLOCK------')
-    fiat.unlock('front left')
-    print('-----SECOND UNLOCK------')
-    fiat.unlock('front left')
-    print('-----------')
